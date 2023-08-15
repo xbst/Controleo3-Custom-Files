@@ -1,0 +1,107 @@
+Controleo3 Profile  // This must be the first item in the file
+
+// Notes:
+// 1. Comment lines can start with # or //
+// 2. Comments can start after a token (e.g. Door close 1s // Close the oven door in 1 second)
+// 3. Tokens are case-insensitive
+// 4. End of line character can be CR or LF (or both, in any order)
+// 5. Number delimiters can be any non-digit character (30/40/50 = 30,40,50 = 30 40 50)
+// 6. When reading in profile files, Arduino's Serial Monitor will show debugging information
+
+
+// The name of this profile
+Name "ChipQuik SMD291AX"
+// The title is displayed in the top-left corner
+Title "Reflow"
+// Show a graph, including the liquidus temperature
+Show graph to 260C for 600 seconds
+Graph divider at 175C
+// The deviation (in Celsius) above which to abort
+Deviation to abort 25C
+// The maximum temperature.  If exceeded, reflow will abort and the oven door opened
+Maximum temperature 260C
+// Set a maximum duty cycle to avoid damage to your oven (bottom/top/boost)
+Maximum duty 100/75/60
+
+
+// Close the oven door if it isn't already
+Close door over 1 second
+// Turn the convection fan on
+Convection fan on
+// Turn the cooling fan off
+Cooling fan off
+// Stop the timer for now, until the temperature is above 50C
+Stop timer
+// Wait for the oven to cool to get consistent results
+Display "Waiting for oven to cool to 50~C"
+Wait until below 50C
+
+// Start the reflow
+Display "Phase: Pre-soak"
+// Turn on elements for a short while to heat them up
+Element duty cycle 80/50/25
+Wait until above 75C
+
+// The heating elements typically take some time to heat up, so it is best to
+// zero-base the reflow to a higher temperature.  The graph in the datasheet shows
+// 75C after 15 seconds, so that's what we do here
+Initialize timer to 15 seconds 
+Start plotting at 15 seconds
+// Select the heating bias (bottom/top/boost)
+Bias 100/80/60
+// Continue ramping up the temperature using PID
+Ramp temperature to 150C in 105s
+
+// Start the soak phase
+Display "Phase: Soak"
+// Select the heating bias (bottom/top/boost)
+Bias 100/50/20
+// Slow increase in temperature during soak
+Ramp temperature to 183C in 30s
+
+// Start the reflow phase
+Display "Phase: Reflow (boost)"
+// Force the elements on for a short while to get a quick increase in
+// the temperature of the elements (bottom/top/boost)
+// This will be limited by the "Maximum duty" command above
+Element duty cycle 100/100/100
+Wait for 10 seconds
+Display "Phase: Reflow"
+// Select the heating bias (bottom/top/boost)
+Bias 100/80/60
+// Ramp up the temperature for reflow
+Ramp temperature to 230C in 45s
+
+// Hold the temperature at peak for a few seconds
+Display "Phase: Reflow (hold)"
+// Maintain peak temperature for a short while
+Maintain 235C for 30 seconds
+// Stop the timer so we know how long the reflow took
+Stop timer
+// Turn the elements off now (bottom/top/boost)
+Element duty cycle 0/0/0
+
+// Start Cooling
+Display "Phase: Cooling"
+// Open the oven door
+Open door over 10 seconds
+// Wait for the door to open
+Wait for 10 seconds
+// Turn the cooling fan on
+Cooling fan on
+// Wait for the temperature to drop
+Wait until below 100C
+
+// Boards can be removed now
+Display "Boards can be removed now"
+// Play a tune that the reflow is done
+Play tune
+// Wait for the temperature to drop further
+Wait until below 50C
+
+// Reflow is done now
+Display "Reflow complete!"
+Convection fan off
+Cooling fan off
+// Close the oven door
+Close door over 3 seconds
